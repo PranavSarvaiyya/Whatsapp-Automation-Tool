@@ -40,5 +40,14 @@ def send_whatsapp_message(recipient_number, message_body):
         )
         return message.sid
     except Exception as e:
-        print(f"Error sending message: {e}")
+        print(f"\n--- TWILIO ERROR ---")
+        print(f"Failed to send to: {recipient_number}")
+        print(f"Error Message: {e}")
+        if hasattr(e, 'code'):
+            print(f"Error Code: {e.code}")
+            if e.code == 63015:
+                print("Suggestion: This number is not sandboxed. Send 'join <keyword>' to the Twilio number.")
+            elif e.code == 21211:
+                print("Suggestion: Invalid Phone Number format.")
+        print("--------------------\n")
         return None

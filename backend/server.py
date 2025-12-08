@@ -10,25 +10,9 @@ from whatsapp_client import send_whatsapp_message
 app = Flask(__name__)
 CORS(app)
 
-import shutil
-
-app = Flask(__name__)
-CORS(app)
-
-# Vercel handling: Copy DB to /tmp to allow write access (ephemeral)
-DB_SOURCE = os.path.join(os.path.dirname(__file__), 'scheduled_messages.db')
-DB_PATH = '/tmp/scheduled_messages.db'
+DB_PATH = 'scheduled_messages.db'
 
 def init_db():
-    # Only copy if it doesn't exist in /tmp yet (or always copy if we want to reset/load seed)
-    if not os.path.exists(DB_PATH):
-        if os.path.exists(DB_SOURCE):
-            shutil.copy2(DB_SOURCE, DB_PATH)
-        else:
-            # Create a new empty db if source missing
-            conn = sqlite3.connect(DB_PATH)
-            conn.close()
-
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute('''
@@ -63,33 +47,39 @@ def init_db():
 
 init_db()
 
+def process_due_messages():
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+        
+        # Find pending messages that are due or past due
+        c.execute("SELECT id, phone_number, message FROM messages WHERE status='pending' AND scheduled_time <= ?", (current_time,))
+        messages = c.fetchall()
+        
+        processed_count = 0
+        for msg in messages:
+            msg_id, phone, text = msg
+            print(f"Sending scheduled message to {phone}: {text}")
+            sid = send_whatsapp_message(phone, text)
+            
+            status = 'sent' if sid else 'failed'
+            c.execute("UPDATE messages SET status=? WHERE id=?", (status, msg_id))
+            conn.commit()
+            processed_count += 1
+            
+        conn.close()
+        return processed_count
+    except Exception as e:
+        print(f"Scheduler error: {e}")
+        return 0
+
 def check_schedule():
     while True:
-        try:
-            conn = sqlite3.connect(DB_PATH)
-            c = conn.cursor()
-            current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
-            
-            # Find pending messages that are due or past due
-            c.execute("SELECT id, phone_number, message FROM messages WHERE status='pending' AND scheduled_time <= ?", (current_time,))
-            messages = c.fetchall()
-            
-            for msg in messages:
-                msg_id, phone, text = msg
-                print(f"Sending scheduled message to {phone}: {text}")
-                sid = send_whatsapp_message(phone, text)
-                
-                status = 'sent' if sid else 'failed'
-                c.execute("UPDATE messages SET status=? WHERE id=?", (status, msg_id))
-                conn.commit()
-                
-            conn.close()
-        except Exception as e:
-            print(f"Scheduler error: {e}")
-            
+        process_due_messages()
         time.sleep(30) # Check every 30 seconds
 
-# Start scheduler in background thread
+# Start scheduler in background thread (useful for local dev)
 scheduler_thread = threading.Thread(target=check_schedule, daemon=True)
 scheduler_thread.start()
 
@@ -115,6 +105,9 @@ def schedule_message():
         msg_id = c.lastrowid
         conn.close()
         
+        # Try to process immediately if time is now
+        process_due_messages()
+        
         return jsonify({"success": True, "id": msg_id, "message": "Message scheduled successfully"})
     except ValueError:
         return jsonify({"error": "Invalid date format. Use YYYY-MM-DD HH:MM"}), 400
@@ -123,6 +116,9 @@ def schedule_message():
 
 @app.route('/api/messages', methods=['GET'])
 def get_messages():
+    # Trigger processing on poll (hack for serverless/Vercel)
+    process_due_messages()
+    
     try:
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
@@ -140,7 +136,6 @@ def get_messages():
                 "createdAt": row[5]
             })
         conn.close()
-        return jsonify(messages)
         return jsonify(messages)
     except Exception as e:
         return jsonify({"error": str(e)}), 500

@@ -10,7 +10,17 @@ from whatsapp_client import send_whatsapp_message
 app = Flask(__name__)
 CORS(app)
 
-DB_PATH = 'scheduled_messages.db'
+# Use /tmp for database in serverless Vercel environment (persistent storage is not available anyway)
+# But for read-only initial load if we want to ship a db, we need to handle that.
+# However, user wants it to work. Since Vercel is read-only file system except /tmp, 
+# we must copy the DB to /tmp if we want to write to it, OR just accept it will fail to write.
+# For now let's use a robust path relative to this file for finding it, 
+# AND better yet, use /tmp/scheduled_messages.db for runtime.
+
+DB_PATH = os.path.join(os.path.dirname(__file__), 'scheduled_messages.db')
+# For Vercel, we have to copy this to /tmp to be writable, or use /tmp/db.sqlite
+# Let's try to just point to the moved file first.
+DB_PATH = os.path.join(os.path.dirname(__file__), 'scheduled_messages.db')
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)

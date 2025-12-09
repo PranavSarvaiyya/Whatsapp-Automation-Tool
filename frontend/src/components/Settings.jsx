@@ -3,6 +3,9 @@ import AppShell from './Layout/AppShell';
 import { Settings as SettingsIcon, User, Bell, Key, Save, Shield, Loader, CheckCircle } from 'lucide-react';
 import axios from 'axios';
 
+
+import { API_URL } from '../config';
+
 const Settings = () => {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -22,7 +25,7 @@ const Settings = () => {
                 const email = localStorage.getItem('userEmail') || 'admin@autowhat.com';
                 
                 // Fetch server settings
-                const res = await axios.get('http://localhost:5000/api/settings');
+                const res = await axios.get(`${API_URL}/api/settings`);
                 const serverSettings = res.data;
                 
                 setFormData(prev => ({
@@ -46,7 +49,7 @@ const Settings = () => {
         setLoading(true);
         setSuccess(false);
         try {
-            await axios.post('http://localhost:5000/api/settings', formData);
+            await axios.post(`${API_URL}/api/settings`, formData);
             // Also update local storage for sidebar
             localStorage.setItem('userEmail', formData.user_email);
             

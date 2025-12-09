@@ -4,6 +4,8 @@ import { MessageSquare, Plus, X, Search, Filter, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 
+import { API_URL } from '../config';
+
 const Campaigns = () => {
     const [campaigns, setCampaigns] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,7 +19,7 @@ const Campaigns = () => {
 
     const fetchCampaigns = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/messages');
+            const res = await axios.get(`${API_URL}/api/messages`);
             setCampaigns(res.data);
         } catch (error) {
             console.error("Error fetching campaigns:", error);
@@ -31,7 +33,7 @@ const Campaigns = () => {
              // For datetime-local input, we need to replace T with space for backend if needed, 
              // but backend expects YYYY-MM-DD HH:MM. datetime-local gives YYYY-MM-DDTHH:MM
             const formattedTime = formData.scheduledTime.replace('T', ' ');
-            await axios.post('http://localhost:5000/api/schedule', { ...formData, scheduledTime: formattedTime });
+            await axios.post(`${API_URL}/api/schedule`, { ...formData, scheduledTime: formattedTime });
             
             fetchCampaigns();
             setIsModalOpen(false);

@@ -4,6 +4,7 @@ import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import AppShell from './Layout/AppShell';
 import { StatCard } from './ui/StatCard';
+import { API_URL } from '../config';
 
 const Dashboard = () => {
     const [messages, setMessages] = useState([]);
@@ -15,7 +16,7 @@ const Dashboard = () => {
 
     const handleDelete = async (id) => {
         try {
-            await axios.delete(`http://localhost:5000/api/messages/${id}`);
+            await axios.delete(`${API_URL}/api/messages/${id}`);
             fetchMessages();
             setStatus({ type: 'success', text: 'Message deleted' });
         } catch (error) {
@@ -33,7 +34,7 @@ const Dashboard = () => {
 
     const fetchMessages = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/messages');
+            const res = await axios.get(`${API_URL}/api/messages`);
             setMessages(res.data);
         } catch (error) {
             console.error("Error fetching messages:", error);
@@ -53,7 +54,7 @@ const Dashboard = () => {
                 return;
             }
             const formattedTime = formData.scheduledTime.replace('T', ' ');
-            await axios.post('http://localhost:5000/api/schedule', { ...formData, scheduledTime: formattedTime });
+            await axios.post(`${API_URL}/api/schedule`, { ...formData, scheduledTime: formattedTime });
             setStatus({ type: 'success', text: 'Scheduled successfully' });
             setFormData({ phoneNumber: '', message: '', scheduledTime: '' });
             fetchMessages();

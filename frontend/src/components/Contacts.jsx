@@ -4,6 +4,8 @@ import { Users, Plus, X, Trash2, Search, Tag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 
+import { API_URL } from '../config';
+
 const Contacts = () => {
     const [contacts, setContacts] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -16,7 +18,7 @@ const Contacts = () => {
 
     const fetchContacts = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/contacts');
+            const res = await axios.get(`${API_URL}/api/contacts`);
             setContacts(res.data);
         } catch (error) {
             console.error("Error fetching contacts:", error);
@@ -28,7 +30,7 @@ const Contacts = () => {
         setLoading(true);
         try {
             const tagsArray = formData.tags.split(',').map(t => t.trim()).filter(t => t);
-            await axios.post('http://localhost:5000/api/contacts', { ...formData, tags: tagsArray });
+            await axios.post(`${API_URL}/api/contacts`, { ...formData, tags: tagsArray });
             
             fetchContacts();
             setIsModalOpen(false);
@@ -43,7 +45,7 @@ const Contacts = () => {
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this contact?')) return;
         try {
-            await axios.delete(`http://localhost:5000/api/contacts/${id}`);
+            await axios.delete(`${API_URL}/api/contacts/${id}`);
             fetchContacts();
         } catch (error) {
             console.error(error);

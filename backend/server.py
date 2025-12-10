@@ -22,6 +22,7 @@ USE_MONGO = False
 
 @app.route('/')
 def home():
+    # Check if server is running
     return "✅ Backend Server is Running! (Whatsapp Automation Tool)"
 
 # Try to connect to MongoDB if URI is present

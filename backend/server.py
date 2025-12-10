@@ -15,9 +15,14 @@ app = Flask(__name__)
 CORS(app)
 
 # Database Configuration
-MONGO_URI = os.getenv("mongodb+srv://pranavsarvaiyya_db_user:<Pranav1234>@cluster0.j3qbyut.mongodb.net/?appName=Cluster0")
+MONGO_URI = os.getenv("MONGO_URI")
+# NOTE: Set MONGO_URI in Render Dashboard -> Environment Variables
 DB_PATH = 'scheduled_messages.db'
 USE_MONGO = False
+
+@app.route('/')
+def home():
+    return "✅ Backend Server is Running! (Whatsapp Automation Tool)"
 
 # Try to connect to MongoDB if URI is present
 if MONGO_URI:

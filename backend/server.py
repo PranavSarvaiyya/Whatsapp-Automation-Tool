@@ -56,15 +56,32 @@ def token_required(f):
 
 # --- Auth Routes ---
 
+@app.route('/api/signup', methods=['POST'])
+def signup():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+
+    if not username or not password:
+        return jsonify({'error': 'Username and password required'}), 400
+
+    if db_get_user(username):
+        return jsonify({'error': 'Username already exists'}), 400
+
+    hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    db_create_user(username, hashed_pw.decode('utf-8'))
+    
+    return jsonify({'success': True, 'message': 'User created successfully'})
+
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.json
     username = data.get('username')
     password = data.get('password')
 
-    # Hardcoded Admin User (For MVP)
-    # User: admin, Pass: password123
-    if username == 'admin' and password == 'password123':
+    user = db_get_user(username)
+    
+    if user and bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
         token = jwt.encode({
             'user': username,
             'exp': datetime.utcnow() + timedelta(hours=24)
@@ -123,6 +140,17 @@ def init_sqlite():
         CREATE TABLE IF NOT EXISTS settings (
             key TEXT PRIMARY KEY,
             value TEXT
+        )
+        CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            password TEXT
         )
     ''')
     conn.commit()
@@ -304,6 +332,29 @@ def db_save_settings(data):
                 c.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", (key, str(value)))
         conn.commit()
         conn.close()
+
+def db_create_user(username, hashed_password):
+    if USE_MONGO:
+        db.users.insert_one({"username": username, "password": hashed_password})
+    else:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed_password))
+        conn.commit()
+        conn.close()
+
+def db_get_user(username):
+    if USE_MONGO:
+        return db.users.find_one({"username": username})
+    else:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute("SELECT * FROM users WHERE username=?", (username,))
+        row = c.fetchone()
+        conn.close()
+        if row:
+            return {"id": row[0], "username": row[1], "password": row[2]}
+        return None
 
 # --- Core Logic ---
 

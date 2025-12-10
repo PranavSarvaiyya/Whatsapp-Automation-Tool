@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { KeyRound, User, ChevronRight } from 'lucide-react';
 import { API_URL } from '../config';
 
@@ -91,8 +91,11 @@ const Login = () => {
                         </button>
                     </form>
                     
-                    <div className="mt-6 text-center text-xs text-slate-400">
-                        Default: admin / password123
+                    <div className="mt-6 text-center text-sm text-slate-500">
+                        Don't have an account?{' '}
+                        <Link to="/signup" className="text-orange-600 font-bold hover:underline">
+                            Sign Up
+                        </Link>
                     </div>
                 </div>
             </div>

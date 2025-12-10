@@ -15,7 +15,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Database Configuration
-MONGO_URI = os.getenv("MONGO_URI")
+MONGO_URI = os.getenv("mongodb+srv://pranavsarvaiyya_db_user:<Pranav1234>@cluster0.j3qbyut.mongodb.net/?appName=Cluster0")
 DB_PATH = 'scheduled_messages.db'
 USE_MONGO = False
 

@@ -183,35 +183,6 @@ def login():
 def verify_token():
     return jsonify({'valid': True})
 
-@app.route('/api/change-password', methods=['POST'])
-@token_required
-def change_password():
-    data = request.json
-    current_password = data.get('currentPassword')
-    new_password = data.get('newPassword')
-    
-    if not current_password or not new_password:
-        return jsonify({'error': 'Both passwords are required'}), 400
-    
-    # Get username from token
-    token = request.headers.get('Authorization').split(" ")[1]
-    payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-    username = payload.get('user')
-    
-    # Verify current password
-    user = db_get_user(username)
-    if not user or not bcrypt.checkpw(current_password.encode('utf-8'), user['password'].encode('utf-8')):
-        return jsonify({'error': 'Current password is incorrect'}), 401
-    
-    # Update password
-    hashed_pw = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
-    db.users.update_one(
-        {"username": username},
-        {"$set": {"password": hashed_pw.decode('utf-8')}}
-    )
-    
-    return jsonify({'success': True, 'message': 'Password updated successfully'})
-
 # --- Core Logic ---
 
 def process_due_messages():

@@ -141,10 +141,6 @@ def init_sqlite():
             key TEXT PRIMARY KEY,
             value TEXT
         )
-        CREATE TABLE IF NOT EXISTS settings (
-            key TEXT PRIMARY KEY,
-            value TEXT
-        )
     ''')
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (

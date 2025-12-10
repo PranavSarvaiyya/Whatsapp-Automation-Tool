@@ -25,6 +25,59 @@ def home():
     # Check if server is running
     return "✅ Backend Server is Running! (Whatsapp Automation Tool)"
 
+import jwt
+import bcrypt
+from functools import wraps
+from datetime import datetime, timedelta
+
+# Default Secret Config (Change in Production!)
+SECRET_KEY = os.getenv("SECRET_KEY", "super_secret_key_12345")
+
+# --- Auth Decorator ---
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
+            if auth_header.startswith("Bearer "):
+                token = auth_header.split(" ")[1]
+        
+        if not token:
+            return jsonify({'error': 'Token is missing!'}), 401
+        
+        try:
+            jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        except:
+            return jsonify({'error': 'Token is invalid!'}), 401
+        
+        return f(*args, **kwargs)
+    return decorated
+
+# --- Auth Routes ---
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+
+    # Hardcoded Admin User (For MVP)
+    # User: admin, Pass: password123
+    if username == 'admin' and password == 'password123':
+        token = jwt.encode({
+            'user': username,
+            'exp': datetime.utcnow() + timedelta(hours=24)
+        }, SECRET_KEY, algorithm="HS256")
+        return jsonify({'token': token})
+    
+    return jsonify({'error': 'Invalid credentials'}), 401
+
+@app.route('/api/verify-token', methods=['GET'])
+@token_required
+def verify_token():
+    return jsonify({'valid': True})
+
 # Try to connect to MongoDB if URI is present
 if MONGO_URI:
     try:

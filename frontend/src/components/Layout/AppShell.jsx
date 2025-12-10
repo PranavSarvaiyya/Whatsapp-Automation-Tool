@@ -11,7 +11,7 @@ const AppShell = ({ children }) => {
     const navigate = useNavigate();
 
     const handleLogout = () => {
-        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('token');
         navigate('/login');
     };
 

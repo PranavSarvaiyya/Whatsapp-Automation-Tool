@@ -17,6 +17,12 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.dark {
+  color-scheme: dark;
+  color: #f1f5f9;
+  background-color: #0f172a;
+}
+
 body {
   margin: 0;
   display: flex;

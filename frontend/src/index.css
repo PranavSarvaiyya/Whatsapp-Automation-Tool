@@ -8,8 +8,8 @@
   font-weight: 400;
 
   color-scheme: light;
-  color: #0f172a;
-  background-color: #f8fafc;
+  color: #1e293b;
+  background-color: #ffffff;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -19,8 +19,8 @@
 
 .dark {
   color-scheme: dark;
-  color: #f1f5f9;
-  background-color: #0f172a;
+  color: #e2e8f0;
+  background-color: #1e293b;
 }
 
 body {
